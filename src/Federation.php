@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PascalDeVink\GraphQLFederation;
+namespace Mindgram\GraphQLFederation;
 
 use GraphQL\Language\AST\DirectiveNode;
 use GraphQL\Language\Parser;
