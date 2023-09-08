@@ -1,10 +1,9 @@
 {
     "name": "mindgram/graphql-federation",
-    "version": "3.0.0",
     "description": "Utility for creating GraphQL microservices, which can be combined into a single endpoint through tools like Apollo Gateway",
     "keywords": ["graphql", "federation", "apollo"],
-    "type": "library",
-    "license": "MIT",
+    "type": "package",
+    "license": "proprietary",
     "authors": [
         {
             "name": "Pascal de vink",
