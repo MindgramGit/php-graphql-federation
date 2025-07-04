@@ -9,6 +9,7 @@ use GraphQL\Type\Definition\ListOfType;
 use GraphQL\Type\Definition\NonNull;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\ResolveInfo;
+use GraphQL\Type\Definition\FieldDefinition;
 use GraphQL\Type\Definition\UnionType;
 use GraphQL\Utils\BuildSchema;
 use GraphQL\Utils\SchemaPrinter;
@@ -41,7 +42,7 @@ type Query {
 }
 EOF;
 
-        $schema = BuildSchema::build($sdl);
+        $schema = BuildSchema::build($sdl, null, ['assumeValidSDL' => true]);
 
         $result = $this->federation->extendSchema($schema);
 
@@ -91,7 +92,7 @@ type User @key(fields: "id") {
 }
 EOF;
 
-        $schema = BuildSchema::build($sdl);
+        $schema = BuildSchema::build($sdl, null, ['assumeValidSDL' => true]);
 
         $result = $this->federation->extendSchema($schema);
 
@@ -116,15 +117,15 @@ type User {
   id: ID!
 }
 
-scalar _Any
-
-union _Entity = User
-
 scalar _FieldSet
 
 type _Service {
   sdl: String
 }
+
+scalar _Any
+
+union _Entity = User
 
 EOF;
 
@@ -167,23 +168,24 @@ type Query {
 }
 EOF;
 
-        $schema = $this->federation->extendSchema(BuildSchema::build($sdl));
+        $schema = $this->federation->extendSchema(BuildSchema::build($sdl, null, ['assumeValidSDL' => true]));
 
         $rootValue   = $this->federation->addResolversToRootValue([]);
+        // Construct ResolveInfo using new signature
+        $queryType = $schema->getQueryType();
+        $fieldDef = $queryType->getField('_service');
+        $fieldNodes = new \ArrayObject([]);
+        $operation = new OperationDefinitionNode([]);
         $resolveInfo = new ResolveInfo(
-            '_service',
-            [],
-            new NonNull(
-                new ObjectType(['name' => '_Service'])
-            ),
-            new ObjectType(['name' => 'Query']),
-            [
-                '_service',
-            ],
+            $fieldDef,
+            $fieldNodes,
+            $queryType,
+            ['_service'],
             $schema,
             [],
             $rootValue,
-            new OperationDefinitionNode([]),
+            $operation,
+            [],
             []
         );
         $result      = call_user_func($rootValue['_service'], [], [], null, $resolveInfo);
@@ -234,25 +236,30 @@ type User {
 }
 EOF;
 
-        $schema = $this->federation->extendSchema(BuildSchema::build($sdl));
+        $schema = $this->federation->extendSchema(BuildSchema::build($sdl, null, ['assumeValidSDL' => true]));
 
         $rootValue   = $this->federation->addResolversToRootValue([]);
-        $resolveInfo = new ResolveInfo(
-            '_entities',
-            [],
-            new NonNull(
+        // Construct ResolveInfo using new signature
+        $queryType = $schema->getQueryType();
+        $fieldDef = new FieldDefinition([
+            'name' => '_entities',
+            'type' => new NonNull(
                 new ListOfType(
                     new UnionType(['name' => 'Entity'])
                 )
             ),
-            new ObjectType(['name' => 'Query']),
-            [
-                '_entities',
-            ],
+        ]);
+        $fieldNodes = new \ArrayObject([]);
+        $operation = new OperationDefinitionNode([]);
+        $resolveInfo = new ResolveInfo(
+            $fieldDef,
+            $fieldNodes,
+            $queryType,
+            ['_entities'],
             $schema,
             [],
             $rootValue,
-            new OperationDefinitionNode([]),
+            $operation,
             [
                 'representations' => [
                     [
@@ -260,7 +267,8 @@ EOF;
                         'id'         => '2',
                     ],
                 ],
-            ]
+            ],
+            []
         );
 
         $result      = call_user_func(
